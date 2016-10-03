@@ -206,7 +206,7 @@ static void setup_iomux_enet(void)
 	udelay(500);
 	gpio_set_value(IMX_GPIO_NR(1, 28), 1);
 }
-
+#ifndef CONFIG_ADCS
 static iomux_v3_cfg_t const usdhc2_pads[] = {
 	MX6_PAD_SD2_CLK__SD2_CLK	| MUX_PAD_CTRL(USDHC_PAD_CTRL),
 	MX6_PAD_SD2_CMD__SD2_CMD	| MUX_PAD_CTRL(USDHC_PAD_CTRL),
@@ -247,7 +247,28 @@ static iomux_v3_cfg_t const usdhc4_pads[] = {
 	MX6_PAD_SD4_DAT6__SD4_DATA6 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
 	MX6_PAD_SD4_DAT7__SD4_DATA7 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
 };
+#else
+static iomux_v3_cfg_t const audmux_pads[] = {
+	MX6_PAD_CSI0_VSYNC__GPIO5_IO21 | MUX_PAD_CTRL(NO_PAD_CTRL), /* cs4244 rst */
+	MX6_PAD_CSI0_PIXCLK__GPIO5_IO18 | MUX_PAD_CTRL(NO_PAD_CTRL),/* cs4244 int */
+	MX6_PAD_CSI0_MCLK__CCM_CLKO1 |   MUX_PAD_CTRL(NO_PAD_CTRL),
+	
+	MX6_PAD_CSI0_DAT7__AUD3_RXD	| MUX_PAD_CTRL(NO_PAD_CTRL),
+	MX6_PAD_CSI0_DAT4__AUD3_TXC	| MUX_PAD_CTRL(NO_PAD_CTRL),
+	MX6_PAD_CSI0_DAT5__AUD3_TXD	|MUX_PAD_CTRL(NO_PAD_CTRL),
+	MX6_PAD_CSI0_DAT6__AUD3_TXFS| MUX_PAD_CTRL(NO_PAD_CTRL)
+};
+static void setup_audmux(void)
+{
+	imx_iomux_v3_setup_multiple_pads(audmux_pads, ARRAY_SIZE(audmux_pads));
+	
+	gpio_direction_input(IMX_GPIO_NR(5, 18));
+	gpio_direction_output(IMX_GPIO_NR(5, 21), 0);
+	udelay(500);
+	gpio_set_value(IMX_GPIO_NR(5, 18), 1);
 
+}
+#endif
 #ifdef CONFIG_MXC_SPI
 static iomux_v3_cfg_t const ecspi1_pads[] = {
 	MX6_PAD_KEY_COL0__ECSPI1_SCLK | MUX_PAD_CTRL(SPI_PAD_CTRL),
@@ -1104,7 +1125,9 @@ int board_init(void)
 #ifdef CONFIG_CMD_SATA
 	setup_sata();
 #endif
-
+#ifdef CONFIG_ADCS
+	setup_audmux();
+#endif
 	return 0;
 }
 
