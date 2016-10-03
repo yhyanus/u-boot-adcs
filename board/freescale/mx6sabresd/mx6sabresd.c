@@ -348,8 +348,10 @@ static struct i2c_pads_info i2c_pad_info1 = {
 };
 
 iomux_v3_cfg_t const pcie_pads[] = {
-/*	MX6_PAD_EIM_D19__GPIO3_IO19 | MUX_PAD_CTRL(NO_PAD_CTRL),*/	/* POWER */
-	MX6_PAD_GPIO_17__GPIO7_IO12 | MUX_PAD_CTRL(NO_PAD_CTRL),	/* RESET */
+/*MX6_PAD_EIM_D19__GPIO3_IO19 | MUX_PAD_CTRL(NO_PAD_CTRL),*/	/* POWER */
+/*MX6_PAD_GPIO_17__GPIO7_IO12 | MUX_PAD_CTRL(NO_PAD_CTRL),*/	/* RESET */
+	MX6_PAD_SD2_DAT3__GPIO1_IO12 | MUX_PAD_CTRL(NO_PAD_CTRL),*/	/* POWER */
+	MX6_PAD_SD1_CMD__GPIO1_IO18 | MUX_PAD_CTRL(NO_PAD_CTRL),	/* RESET */
 };
 
 static void setup_pcie(void)
