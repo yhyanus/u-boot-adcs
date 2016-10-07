@@ -45,6 +45,40 @@
 #include "mx6sabre_common.h"
 #ifdef CONFIG_ADCS
 #undef CONFIG_LDO_BYPASS_CHECK
+#define CONFIG_MTD_UBI_BLOCK
+#define CONFIG_MTD_DEVICE 
+#define CONFIG_FLASH_CFI_MTD 
+#define CONFIG_MTD_PARTITIONS
+#define CONFIG_CMD_UBIFS
+#define CONFIG_CMD_UBI 
+#define CONFIG_RBTREE
+#define CONFIG_LZO
+#define CONFIG_CMD_EXT4
+#define CONFIG_FS_EXT4
+#define CONFIG_EXT4_WRITE
+#define MTDIDS_DEFAULT "nand0=gpmi-nand"    /*,nor0=nor0" */
+#define MTDPARTS_DEFAULT "mtdparts=gpmi-nand:64m(boot),16m(kernel),16m(dtb),-(rootfs)"
+#undef CONFIG_MFG_ENV_SETTINGS
+#define CONFIG_MFG_ENV_SETTINGS ""
+#define CONFIG_EXTRA_ENV_SETTINGS \
+	CONFIG_MFG_ENV_SETTINGS \
+	"ethaddr=22:11:11:22:22:22\0" \
+	"ipaddr=192.168.2.13\0" \
+	"serverip=192.168.2.200\0" \
+	"fdt_addr=0x8800000\0" \
+	"fdt_high=0xffffffff\0"	  \
+	"bootargs=console=" CONFIG_CONSOLE_DEV ",115200 ubi.mtd=3 "  \
+		"root=ubi:rootfs rootfstype=ubifs "		     \
+		"mtdparts=gpmi-nand:64m(boot),16m(kernel),16m(dtb),-(rootfs)\0"\
+	"bootcmd=bootz ${loadaddr} - ${fdt_addr}\0"
+/*
+setenv mtdids "nor0=nor0,nand0=gpmi-nand"
+setenv mtdparts "mtdparts=nor0:1024k(ARMboot)ro,-(kernel);gpmi-nand:16m(boot),64m(kernel),16m(dtb),-(rootfs)"
+
+setenv bootargs "console=ttymxc0,115200 rdinit=/linuxrc"
+setenv bootargs "console=ttymxc0,115200 ubi.mtd=3 root=ubi:rootfs rootfstype=ubifs mtdparts=gpmi-nand:64m(boot),16m(kernel),16m(dtb),-(rootfs)"
+tftp 12000000 zImage;tftp 18000000 zImage.dtb;bootz 12000000 - 18000000
+*/
 #else
 #define CONFIG_SYS_FSL_USDHC_NUM	3
 #define CONFIG_SYS_MMC_ENV_DEV		1	/* SDHC3 */
