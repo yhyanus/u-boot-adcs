@@ -20,9 +20,5 @@ endchoice
 config SYS_SOC
 	default "omap5"
 
-source "board/compulab/cm_t54/Kconfig"
-source "board/ti/omap5_uevm/Kconfig"
-source "board/ti/dra7xx/Kconfig"
-source "board/ti/beagle_x15/Kconfig"
 
 endif

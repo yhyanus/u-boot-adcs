@@ -40,6 +40,5 @@ endchoice
 config SYS_SOC
 	default "mx6"
 
-source "board/seco/Kconfig"
 
 endif

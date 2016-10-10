@@ -37,13 +37,5 @@ config RMOBILE_EXTRAM_BOOT
 	depends on TARGET_ALT || TARGET_KOELSCH || TARGET_LAGER || TARGET_PORTER || TARGET_SILK
 	default n
 
-source "board/atmark-techno/armadillo-800eva/Kconfig"
-source "board/renesas/gose/Kconfig"
-source "board/renesas/koelsch/Kconfig"
-source "board/renesas/lager/Kconfig"
-source "board/kmc/kzm9g/Kconfig"
-source "board/renesas/alt/Kconfig"
-source "board/renesas/silk/Kconfig"
-source "board/renesas/porter/Kconfig"
 
 endif

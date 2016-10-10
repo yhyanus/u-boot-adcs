@@ -86,6 +86,9 @@ DECLARE_GLOBAL_DATA_PTR;
 	PAD_CTL_PUS_47K_UP  | PAD_CTL_SPEED_LOW |		\
 	PAD_CTL_DSE_80ohm   | PAD_CTL_SRE_FAST  | PAD_CTL_HYS)
 
+#define GPIO_PU_PAD_CTRL (PAD_CTL_PUS_47K_UP |			\
+	PAD_CTL_SPEED_LOW | PAD_CTL_DSE_80ohm |			\
+	PAD_CTL_SRE_FAST  | PAD_CTL_HYS)
 
 #define I2C_PMIC	1
 
@@ -249,14 +252,18 @@ static iomux_v3_cfg_t const usdhc4_pads[] = {
 };
 #else
 static iomux_v3_cfg_t const audmux_pads[] = {
-	MX6_PAD_CSI0_VSYNC__GPIO5_IO21 | MUX_PAD_CTRL(NO_PAD_CTRL), /* cs4244 rst */
+	MX6_PAD_CSI0_VSYNC__GPIO5_IO21 | MUX_PAD_CTRL(GPIO_PU_PAD_CTRL), /* cs4244 rst */
 	MX6_PAD_CSI0_PIXCLK__GPIO5_IO18 | MUX_PAD_CTRL(NO_PAD_CTRL),/* cs4244 int */
 	MX6_PAD_CSI0_MCLK__CCM_CLKO1 |   MUX_PAD_CTRL(NO_PAD_CTRL),
 	
 	MX6_PAD_CSI0_DAT7__AUD3_RXD	| MUX_PAD_CTRL(NO_PAD_CTRL),
 	MX6_PAD_CSI0_DAT4__AUD3_TXC	| MUX_PAD_CTRL(NO_PAD_CTRL),
 	MX6_PAD_CSI0_DAT5__AUD3_TXD	|MUX_PAD_CTRL(NO_PAD_CTRL),
-	MX6_PAD_CSI0_DAT6__AUD3_TXFS| MUX_PAD_CTRL(NO_PAD_CTRL)
+	MX6_PAD_CSI0_DAT6__AUD3_TXFS| MUX_PAD_CTRL(NO_PAD_CTRL),
+
+	MX6_PAD_SD4_DAT3__GPIO2_IO11| MUX_PAD_CTRL(NO_PAD_CTRL),
+	MX6_PAD_SD4_DAT4__GPIO2_IO12| MUX_PAD_CTRL(NO_PAD_CTRL),
+	MX6_PAD_SD4_DAT5__GPIO2_IO13| MUX_PAD_CTRL(NO_PAD_CTRL)
 };
 static void setup_audmux(void)
 {
@@ -265,7 +272,8 @@ static void setup_audmux(void)
 	gpio_direction_input(IMX_GPIO_NR(5, 18));
 	gpio_direction_output(IMX_GPIO_NR(5, 21), 0);
 	udelay(500);
-	gpio_set_value(IMX_GPIO_NR(5, 18), 1);
+	gpio_set_value(IMX_GPIO_NR(5, 21), 1);
+	enable_ccm_clko1();
 
 }
 #endif
@@ -333,7 +341,7 @@ static void enable_rgb(struct display_info_t const *dev)
 	imx_iomux_v3_setup_multiple_pads(rgb_pads, ARRAY_SIZE(rgb_pads));
 	gpio_direction_output(DISP0_PWR_EN, 1);
 }
-
+#if 0
 static struct i2c_pads_info i2c_pad_info1 = {
 	.scl = {
 		.i2c_mode = MX6_PAD_KEY_COL3__I2C2_SCL | I2C_PAD,
@@ -346,7 +354,46 @@ static struct i2c_pads_info i2c_pad_info1 = {
 		.gp = IMX_GPIO_NR(4, 13)
 	}
 };
+#else
 
+static struct i2c_pads_info i2c_pad_info1 = {
+	.scl = {
+		.i2c_mode = MX6_PAD_CSI0_DAT9__I2C1_SCL | I2C_PAD,
+		.gpio_mode = MX6_PAD_CSI0_DAT9__GPIO5_IO27 | I2C_PAD,
+		.gp = IMX_GPIO_NR(5, 27)
+	},
+	.sda = {
+		.i2c_mode = MX6_PAD_CSI0_DAT8__I2C1_SDA | I2C_PAD,
+		.gpio_mode = MX6_PAD_CSI0_DAT8__GPIO5_IO26| I2C_PAD,
+		.gp = IMX_GPIO_NR(5, 26)
+	}
+};
+static struct i2c_pads_info i2c_pad_info2 = {
+	.scl = {
+		.i2c_mode = MX6_PAD_KEY_COL3__I2C2_SCL | I2C_PAD,
+		.gpio_mode = MX6_PAD_KEY_COL3__GPIO4_IO12 | I2C_PAD,
+		.gp = IMX_GPIO_NR(4, 12)
+	},
+	.sda = {
+		.i2c_mode = MX6_PAD_KEY_ROW3__I2C2_SDA | I2C_PAD,
+		.gpio_mode = MX6_PAD_KEY_ROW3__GPIO4_IO13 | I2C_PAD,
+		.gp = IMX_GPIO_NR(4, 13)
+	}
+};
+/*
+static struct i2c_pads_info i2c_pad_info3 = {
+	.scl = {
+		.i2c_mode = MX6_PAD_GPIO_0__I2C3_SCL | I2C_PAD,
+		.gpio_mode = MX6_PAD_GPIO_0__GPIO1_IO00 | I2C_PAD,
+		.gp = IMX_GPIO_NR(1, 0)
+	},
+	.sda = {
+		.i2c_mode = MX6_PAD_GPIO_6__I2C3_SDA | I2C_PAD,
+		.gpio_mode = MX6_PAD_GPIO_6__GPIO1_IO06 | I2C_PAD,
+		.gp = IMX_GPIO_NR(1, 6)
+	}
+};*/
+#endif
 iomux_v3_cfg_t const pcie_pads[] = {
 /*MX6_PAD_EIM_D19__GPIO3_IO19 | MUX_PAD_CTRL(NO_PAD_CTRL),*/	/* POWER */
 /*MX6_PAD_GPIO_17__GPIO7_IO12 | MUX_PAD_CTRL(NO_PAD_CTRL),*/	/* RESET */
@@ -877,7 +924,9 @@ static void enable_lvds(struct display_info_t const *dev)
 	writel(reg, &iomux->gpr[2]);
 }
 
-struct display_info_t const displays[] = {{
+struct display_info_t const displays[] = {
+#ifndef CONFIG_ADCS	
+	{
 	.bus	= -1,
 	.addr	= 0,
 	.pixfmt	= IPU_PIX_FMT_RGB666,
@@ -917,7 +966,9 @@ struct display_info_t const displays[] = {{
 		.vsync_len      = 2,
 		.sync           = 0,
 		.vmode          = FB_VMODE_NONINTERLACED
-} }, {
+} }, 
+#endif	
+	{
 	.bus	= 0,
 	.addr	= 0,
 	.pixfmt	= IPU_PIX_FMT_RGB24,
@@ -950,8 +1001,9 @@ static void setup_display(void)
 	imx_iomux_v3_setup_multiple_pads(di0_pads, ARRAY_SIZE(di0_pads));
 
 	enable_ipu_clock();
+#ifndef CONFIG_ADCS
 	imx_setup_hdmi();
-
+#endif
 	/* Turn on LDB0, LDB1, IPU,IPU DI0 clocks */
 	reg = readl(&mxc_ccm->CCGR3);
 	reg |=  MXC_CCM_CCGR3_LDB_DI0_MASK | MXC_CCM_CCGR3_LDB_DI1_MASK;
@@ -1110,8 +1162,9 @@ int board_init(void)
 	setup_gpmi_nand();
 #endif
 
-	setup_i2c(1, CONFIG_SYS_I2C_SPEED, 0x7f, &i2c_pad_info1);
-
+	setup_i2c(0, CONFIG_SYS_I2C_SPEED/2, 0x7f, &i2c_pad_info1);
+	setup_i2c(1, CONFIG_SYS_I2C_SPEED, 0x7f, &i2c_pad_info2);
+//	setup_i2c(2, CONFIG_SYS_I2C_SPEED, 0x7f, &i2c_pad_info3);
 #ifdef CONFIG_USB_EHCI_MX6
 	setup_usb();
 #endif

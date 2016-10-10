@@ -28,6 +28,7 @@
 #define PHYS_SDRAM_SIZE		(2u * 1024 * 1024 * 1024)
 #define CONFIG_SYS_USE_NAND
 #define CONFIG_SYS_USE_SPINOR
+#define CONFIG_CMD_SATA
 #else
 #define PHYS_SDRAM_SIZE		(1u * 1024 * 1024 * 1024)
 #endif

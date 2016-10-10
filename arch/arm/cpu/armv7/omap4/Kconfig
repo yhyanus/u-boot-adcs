@@ -17,8 +17,5 @@ endchoice
 config SYS_SOC
 	default "omap4"
 
-source "board/gumstix/duovero/Kconfig"
-source "board/ti/panda/Kconfig"
-source "board/ti/sdp4430/Kconfig"
 
 endif

@@ -22,6 +22,5 @@ endchoice
 config SYS_SOC
 	default "mx5"
 
-source "board/inversepath/usbarmory/Kconfig"
 
 endif

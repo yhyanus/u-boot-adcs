@@ -428,15 +428,7 @@ config TSC_FREQ_IN_MHZ
 	help
 	  The running frequency in MHz of Time-Stamp Counter (TSC).
 
-source "board/coreboot/coreboot/Kconfig"
 
-source "board/google/chromebook_link/Kconfig"
-
-source "board/intel/crownbay/Kconfig"
-
-source "board/intel/minnowmax/Kconfig"
-
-source "board/intel/galileo/Kconfig"
 
 config PCIE_ECAM_BASE
 	hex
