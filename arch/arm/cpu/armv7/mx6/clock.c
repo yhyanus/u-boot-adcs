@@ -23,7 +23,20 @@ enum pll_clocks {
 };
 
 struct mxc_ccm_reg *imx_ccm = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
+#ifdef CONFIG_ADCS
+void enable_ccm_clko1(unsigned char enable)
+{
+	u32 reg;
 
+	reg = __raw_readl(&imx_ccm->ccosr);
+	if (enable)
+		reg |= MXC_CCM_CCOSR_CKOL_EN;
+	else
+		reg &= ~(MXC_CCM_CCOSR_CKOL_EN);
+	__raw_writel(reg, &imx_ccm->ccosr);
+
+}
+#endif
 #ifdef CONFIG_MXC_OCOTP
 void enable_ocotp_clk(unsigned char enable)
 {
