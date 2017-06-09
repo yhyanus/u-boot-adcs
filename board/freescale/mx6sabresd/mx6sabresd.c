@@ -51,7 +51,7 @@
 #include <recovery.h>
 #endif
 #endif /*CONFIG_FSL_FASTBOOT*/
-
+//#include "mxcfb.h"
 DECLARE_GLOBAL_DATA_PTR;
 
 #define UART_PAD_CTRL  (PAD_CTL_PUS_100K_UP |			\
@@ -94,7 +94,7 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #define I2C_PAD MUX_PAD_CTRL(I2C_PAD_CTRL)
 
-#define DISP0_PWR_EN	IMX_GPIO_NR(1, 21)
+#define DISP0_PWR_EN	IMX_GPIO_NR(2,15)    //(1, 21)
 #define EPDC_PAD_CTRL    (PAD_CTL_PKE | PAD_CTL_SPEED_MED |	\
 	PAD_CTL_DSE_40ohm | PAD_CTL_HYS)
 
@@ -255,29 +255,75 @@ static iomux_v3_cfg_t const audmux_pads[] = {
 	MX6_PAD_CSI0_VSYNC__GPIO5_IO21 | MUX_PAD_CTRL(GPIO_PU_PAD_CTRL), /* cs4244 rst */
 	MX6_PAD_CSI0_PIXCLK__GPIO5_IO18 | MUX_PAD_CTRL(NO_PAD_CTRL),/* cs4244 int */
 	MX6_PAD_CSI0_MCLK__CCM_CLKO1 |   MUX_PAD_CTRL(NO_PAD_CTRL),
-	
+#if __ADCS_VER==1
 	MX6_PAD_CSI0_DAT7__AUD3_RXD	| MUX_PAD_CTRL(NO_PAD_CTRL),
 	MX6_PAD_CSI0_DAT4__AUD3_TXC	| MUX_PAD_CTRL(NO_PAD_CTRL),
 	MX6_PAD_CSI0_DAT5__AUD3_TXD	|MUX_PAD_CTRL(NO_PAD_CTRL),
 	MX6_PAD_CSI0_DAT6__AUD3_TXFS| MUX_PAD_CTRL(NO_PAD_CTRL),
-
+#else
+	MX6_PAD_GPIO_5__ESAI_TX2_RX3 | MUX_PAD_CTRL(NO_PAD_CTRL),
+	MX6_PAD_GPIO_6__ESAI_TX_CLK  | MUX_PAD_CTRL(NO_PAD_CTRL),
+	MX6_PAD_GPIO_7__ESAI_TX4_RX1 | MUX_PAD_CTRL(NO_PAD_CTRL),
+	MX6_PAD_GPIO_8__ESAI_TX5_RX0 | MUX_PAD_CTRL(NO_PAD_CTRL),
+	MX6_PAD_NANDF_CS2__ESAI_TX0  | MUX_PAD_CTRL(NO_PAD_CTRL),/*MX6_PAD_GPIO_17__ESAI_TX0    | MUX_PAD_CTRL(NO_PAD_CTRL),*/
+	MX6_PAD_NANDF_CS3__ESAI_TX1  | MUX_PAD_CTRL(NO_PAD_CTRL),
+	MX6_PAD_GPIO_1__ESAI_RX_CLK  | MUX_PAD_CTRL(NO_PAD_CTRL),
+	MX6_PAD_GPIO_2__ESAI_TX_FS  | MUX_PAD_CTRL(NO_PAD_CTRL),
+	MX6_PAD_GPIO_9__ESAI_RX_FS   | MUX_PAD_CTRL(NO_PAD_CTRL),
+	MX6_PAD_GPIO_16__ESAI_TX3_RX2   | MUX_PAD_CTRL(NO_PAD_CTRL),
+#endif
 	MX6_PAD_SD4_DAT3__GPIO2_IO11| MUX_PAD_CTRL(NO_PAD_CTRL),
 	MX6_PAD_SD4_DAT4__GPIO2_IO12| MUX_PAD_CTRL(NO_PAD_CTRL),
 	MX6_PAD_SD4_DAT5__GPIO2_IO13| MUX_PAD_CTRL(NO_PAD_CTRL)
 };
 static void setup_audmux(void)
 {
+	enable_ccm_clko1(1);
 	imx_iomux_v3_setup_multiple_pads(audmux_pads, ARRAY_SIZE(audmux_pads));
 	
 	gpio_direction_input(IMX_GPIO_NR(5, 18));
 	gpio_direction_output(IMX_GPIO_NR(5, 21), 0);
 	udelay(500);
 	gpio_set_value(IMX_GPIO_NR(5, 21), 1);
-	enable_ccm_clko1();
+
+
+}
+static iomux_v3_cfg_t const A429_pads[] = {
+	MX6_PAD_SD3_CLK__GPIO7_IO03  | MUX_PAD_CTRL(NO_PAD_CTRL),/*A717_ROVF ,NP*/
+	MX6_PAD_SD3_CMD__GPIO7_IO02  | MUX_PAD_CTRL(NO_PAD_CTRL),/*A717_RSEL, NP*/
+	MX6_PAD_SD3_DAT0__GPIO7_IO04 | MUX_PAD_CTRL(NO_PAD_CTRL),/*A717_MR , OUT*/
+	MX6_PAD_SD3_DAT1__GPIO7_IO05 | MUX_PAD_CTRL(NO_PAD_CTRL),/*A429_RUN, NP*/
+	MX6_PAD_SD3_DAT2__GPIO7_IO06 | MUX_PAD_CTRL(NO_PAD_CTRL),/*A429_PROGRAM,NP*/
+	MX6_PAD_SD3_DAT3__GPIO7_IO07 | MUX_PAD_CTRL(NO_PAD_CTRL), /*A429_ATXMASK,NP*/
+	MX6_PAD_SD3_DAT4__GPIO7_IO01 | MUX_PAD_CTRL(NO_PAD_CTRL), /*A429_MINTACK,OUT*/
+	MX6_PAD_SD3_DAT5__GPIO7_IO00 | MUX_PAD_CTRL(NO_PAD_CTRL), /*A429_MINT , INT*/
+	MX6_PAD_SD3_DAT6__GPIO6_IO18 | MUX_PAD_CTRL(NO_PAD_CTRL),   /*A429_AACK ,OUT*/
+	MX6_PAD_SD3_DAT7__GPIO6_IO17 | MUX_PAD_CTRL(NO_PAD_CTRL),  /* A429_AINT ,INT*/
+	MX6_PAD_SD3_RST__GPIO7_IO08   | MUX_PAD_CTRL(NO_PAD_CTRL),  /* A429_RST ,OUT*/
+
+	
+};
+
+static void setup_A429(void)
+{
+	imx_iomux_v3_setup_multiple_pads(A429_pads, ARRAY_SIZE(A429_pads));
+	
+	gpio_direction_input(IMX_GPIO_NR(6, 17));
+	gpio_direction_input(IMX_GPIO_NR(7, 0));
+	gpio_direction_output(IMX_GPIO_NR(6, 18),0);
+	gpio_direction_output(IMX_GPIO_NR(7, 1),0);
+	gpio_direction_output(IMX_GPIO_NR(7, 8), 1);
+	gpio_direction_output(IMX_GPIO_NR(7, 4), 0);
+	udelay(500);
+	gpio_set_value(IMX_GPIO_NR(7, 8), 0);
+	gpio_set_value(IMX_GPIO_NR(7, 4), 1);
+	//enable_ccm_clko1(1);
 
 }
 #endif
 #ifdef CONFIG_MXC_SPI
+
+#define USE_GPIO_FOR_SS 
 static iomux_v3_cfg_t const ecspi1_pads[] = {
 	MX6_PAD_KEY_COL0__ECSPI1_SCLK | MUX_PAD_CTRL(SPI_PAD_CTRL),
 	MX6_PAD_KEY_COL1__ECSPI1_MISO | MUX_PAD_CTRL(SPI_PAD_CTRL),
@@ -288,18 +334,36 @@ static iomux_v3_cfg_t const ecspi1_pads[] = {
 	MX6_PAD_SD1_CLK__ECSPI5_SCLK | MUX_PAD_CTRL(SPI_PAD_CTRL),
 	MX6_PAD_SD2_DAT0__ECSPI5_MISO | MUX_PAD_CTRL(SPI_PAD_CTRL),
 	MX6_PAD_SD2_CMD__ECSPI5_MOSI | MUX_PAD_CTRL(SPI_PAD_CTRL),
+	
 	MX6_PAD_SD2_DAT1__ECSPI5_SS0 | MUX_PAD_CTRL(SPI_PAD_CTRL),
-	MX6_PAD_SD1_DAT3__ECSPI5_SS2 | MUX_PAD_CTRL(SPI_PAD_CTRL)
+	MX6_PAD_SD1_DAT3__ECSPI5_SS2 | MUX_PAD_CTRL(SPI_PAD_CTRL),
+#ifdef USE_GPIO_FOR_SS
+	MX6_PAD_SD2_DAT1__GPIO1_IO14 | MUX_PAD_CTRL(NO_PAD_CTRL),
+	MX6_PAD_SD1_DAT3__GPIO1_IO21 | MUX_PAD_CTRL(NO_PAD_CTRL),
+#endif
 };
 
 static void setup_spi(void)
 {
 	imx_iomux_v3_setup_multiple_pads(ecspi1_pads, ARRAY_SIZE(ecspi1_pads));
+	setup_A429();
 }
 
 int board_spi_cs_gpio(unsigned bus, unsigned cs)
 {
-	return (bus == 0 && cs == 0) ? (IMX_GPIO_NR(4, 9)) : -1;
+	int no;
+	no = (bus == 0 && cs == 0) ? (IMX_GPIO_NR(4, 9)) : -1;
+#ifdef USE_GPIO_FOR_SS
+	if(no==-1)
+	{
+		no = (bus == 4 && cs == 0) ? (IMX_GPIO_NR(1, 14)) : -1;
+	}
+	if(no==-1)
+	{
+		no = (bus == 4 && cs == 2) ? (IMX_GPIO_NR(1, 21)) : -1;
+	}
+#endif
+	return no;
 }
 #endif
 
@@ -333,7 +397,8 @@ static iomux_v3_cfg_t const rgb_pads[] = {
 	MX6_PAD_DISP0_DAT21__IPU1_DISP0_DATA21 | MUX_PAD_CTRL(NO_PAD_CTRL),
 	MX6_PAD_DISP0_DAT22__IPU1_DISP0_DATA22 | MUX_PAD_CTRL(NO_PAD_CTRL),
 	MX6_PAD_DISP0_DAT23__IPU1_DISP0_DATA23 | MUX_PAD_CTRL(NO_PAD_CTRL),
-	MX6_PAD_SD1_DAT3__GPIO1_IO21 | MUX_PAD_CTRL(NO_PAD_CTRL),
+	//MX6_PAD_SD1_DAT3__GPIO1_IO21 | MUX_PAD_CTRL(NO_PAD_CTRL),
+	MX6_PAD_SD4_DAT7__GPIO2_IO15 | MUX_PAD_CTRL(NO_PAD_CTRL),
 };
 
 static void enable_rgb(struct display_info_t const *dev)
@@ -844,7 +909,7 @@ static iomux_v3_cfg_t gpmi_pads[] = {
 	MX6_PAD_NANDF_D5__NAND_DATA05	| MUX_PAD_CTRL(GPMI_PAD_CTRL2),
 	MX6_PAD_NANDF_D6__NAND_DATA06	| MUX_PAD_CTRL(GPMI_PAD_CTRL2),
 	MX6_PAD_NANDF_D7__NAND_DATA07	| MUX_PAD_CTRL(GPMI_PAD_CTRL2),
-	MX6_PAD_SD4_DAT0__NAND_DQS		| MUX_PAD_CTRL(GPMI_PAD_CTRL1),
+	MX6_PAD_SD4_DAT0__GPIO2_IO08		| MUX_PAD_CTRL(NO_PAD_CTRL)/*MX6_PAD_SD4_DAT0__NAND_DQS		| MUX_PAD_CTRL(GPMI_PAD_CTRL1),*/ //remove on 2017/06/07
 };
 
 static void setup_gpmi_nand(void)
@@ -966,9 +1031,7 @@ struct display_info_t const displays[] = {
 		.vsync_len      = 2,
 		.sync           = 0,
 		.vmode          = FB_VMODE_NONINTERLACED
-} }, 
-#endif	
-	{
+} },{
 	.bus	= 0,
 	.addr	= 0,
 	.pixfmt	= IPU_PIX_FMT_RGB24,
@@ -987,6 +1050,28 @@ struct display_info_t const displays[] = {
 		.hsync_len      = 10,
 		.vsync_len      = 10,
 		.sync           = 0,
+		.vmode          = FB_VMODE_NONINTERLACED
+} },
+#endif
+	{
+	.bus	= 0,
+	.addr	= 0,
+	.pixfmt	= IPU_PIX_FMT_RGB24,
+	.detect	= NULL,
+	.enable	= enable_rgb,
+	.mode	= {
+		.name           = "ADV7125",
+		.refresh        = 60,
+		.xres           = 1024,
+		.yres           = 768,
+		.pixclock       = 15385,  
+		.left_margin    = 160,
+		.right_margin   = 24,
+		.upper_margin   = 29,
+		.lower_margin   = 3,
+		.hsync_len      = 136,
+		.vsync_len      =  6,
+		.sync           = 0x40000000,//FB_SYNC_CLK_LAT_FALL,
 		.vmode          = FB_VMODE_NONINTERLACED
 } } };
 size_t display_count = ARRAY_SIZE(displays);
@@ -1080,7 +1165,8 @@ int board_eth_init(bd_t *bis)
 #define UCTRL_PWR_POL		(1 << 9)
 
 static iomux_v3_cfg_t const usb_otg_pads[] = {
-	MX6_PAD_KEY_ROW4__USB_OTG_PWR | MUX_PAD_CTRL(NO_PAD_CTRL),
+	MX6_PAD_KEY_ROW4__GPIO4_IO15 | MUX_PAD_CTRL(NO_PAD_CTRL),
+	MX6_PAD_KEY_COL4__USB_OTG_OC	|	MUX_PAD_CTRL(NO_PAD_CTRL),
 	MX6_PAD_ENET_RX_ER__USB_OTG_ID | MUX_PAD_CTRL(OTG_ID_PAD_CTRL),
 };
 

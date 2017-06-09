@@ -35,6 +35,10 @@ static int spi_flash_read_write(struct spi_slave *spi,
 		if (ret)
 			debug("SF: Failed to transfer %zu bytes of data: %d\n",
 			      data_len, ret);
+		else {
+			debug("SF: transfer %zu bytes of data to address %08X: %d\n",
+			      data_len, (unsigned long )data_out,ret);
+		}
 	}
 
 	return ret;

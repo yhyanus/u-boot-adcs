@@ -3,7 +3,7 @@ PATCHLEVEL = 04
 SUBLEVEL =
 EXTRAVERSION =
 NAME =
-
+ADCS_VER = 2
 # *DOCUMENTATION*
 # To see a list of typical targets execute "make help"
 # More info can be located in ./README
@@ -350,14 +350,14 @@ DTC		= dtc
 CHECK		= sparse
 
 CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
-		  -Wbitwise -Wno-return-void -D__CHECK_ENDIAN__ $(CF)
+		  -Wbitwise -Wno-return-void -D__CHECK_ENDIAN__ $(CF)  -D__ADCS_VER=$(ADCS_VER)
 
-KBUILD_CPPFLAGS := -D__KERNEL__ -D__UBOOT__
+KBUILD_CPPFLAGS := -D__KERNEL__ -D__UBOOT__ -D__ADCS_VER=$(ADCS_VER)
 
 KBUILD_CFLAGS   := -Wall -Wstrict-prototypes \
 		   -Wno-format-security \
-		   -fno-builtin -ffreestanding
-KBUILD_AFLAGS   := -D__ASSEMBLY__
+		   -fno-builtin -ffreestanding  -D__ADCS_VER=$(ADCS_VER)
+KBUILD_AFLAGS   := -D__ASSEMBLY__  -D__ADCS_VER=$(ADCS_VER)
 
 # Read UBOOTRELEASE from include/config/uboot.release (if it exists)
 UBOOTRELEASE = $(shell cat include/config/uboot.release 2> /dev/null)

@@ -24,6 +24,7 @@
 #define CONFIG_MMCROOT			"/dev/mmcblk2p2"  /* SDHC3 */
 #if defined(CONFIG_MX6QP)
 #define CONFIG_DEFAULT_FDT_FILE	"imx6qp-sabresd.dtb"
+
 #ifdef CONFIG_ADCS
 #define PHYS_SDRAM_SIZE		(2u * 1024 * 1024 * 1024)
 #define CONFIG_SYS_USE_NAND
@@ -45,6 +46,7 @@
 
 #include "mx6sabre_common.h"
 #ifdef CONFIG_ADCS
+#define CONFIG_CMD_GPIO 
 #undef CONFIG_LDO_BYPASS_CHECK
 #define CONFIG_MTD_UBI_BLOCK
 #define CONFIG_MTD_DEVICE 
@@ -66,19 +68,29 @@
 	"ethaddr=22:11:11:22:22:22\0" \
 	"ipaddr=192.168.2.13\0" \
 	"serverip=192.168.2.200\0" \
-	"fdt_addr=0x8800000\0" \
+	"fdt_addr=0x18000000\0" \
 	"fdt_high=0xffffffff\0"	  \
-	"bootargs=console=" CONFIG_CONSOLE_DEV ",115200 ubi.mtd=3 "  \
+	"bootargs=console=" CONFIG_CONSOLE_DEV ",115200 ubi.mtd=4 "  \
 		"root=ubi:rootfs rootfstype=ubifs "		     \
-		"mtdparts=gpmi-nand:64m(boot),16m(kernel),16m(dtb),-(rootfs)\0"\
-	"bootcmd=bootz ${loadaddr} - ${fdt_addr}\0"
+		"mtdparts=gpmi-nand:64m(boot),16m(kernel),16m(dtb),-(rootfs) video=mxcfb0:dev=lcd,XVGA,if=RGB24\0"\
+	"bootcmd=bootz ${loadaddr} - ${fdt_addr}\0" \
+	"ftpboot=tftp ${loadaddr} zImage;tftp ${fdt_addr} zImage.dtb;bootz ${loadaddr} - ${fdt_addr}\0" \
+	"kernel_size=0x140000\0" \
+	"fdt_size=0x10000\0" \
+	"norboot=cp.l 8100000 ${loadaddr} ${kernel_size};cp.b 0x8f00000 ${fdt_addr} ${fdt_size};bootz ${loadaddr} - ${fdt_addr}\0" \
+	"inst_kernel=tftp 12000000 zImage;cp.l 12000000 8100000 ${kernel_size};tftp 12000000 zImage.dtb;cp.b 12000000 0x8f00000 ${fdt_size};\0" \
+	"inst_root=mtdparts default;ubi part rootfs;tftp 10000000 rootfs.img;ubi createvol rootfs; ubi write 10000000 rootfs ${filesize};\0" \
 /*
 setenv mtdids "nor0=nor0,nand0=gpmi-nand"
 setenv mtdparts "mtdparts=nor0:1024k(ARMboot)ro,-(kernel);gpmi-nand:16m(boot),64m(kernel),16m(dtb),-(rootfs)"
 
 setenv bootargs "console=ttymxc0,115200 rdinit=/linuxrc"
-setenv bootargs "console=ttymxc0,115200 ubi.mtd=3 root=ubi:rootfs rootfstype=ubifs mtdparts=gpmi-nand:64m(boot),16m(kernel),16m(dtb),-(rootfs)"
+setenv bootargs "console=ttymxc0,115200 ubi.mtd=4 root=ubi:rootfs rootfstype=ubifs mtdparts=gpmi-nand:64m(boot),16m(kernel),16m(dtb),-(rootfs) video=mxcfb0:dev=lcd,XVGA,if=RGB24"
 tftp 12000000 zImage;tftp 18000000 zImage.dtb;bootz 12000000 - 18000000
+
+// write ubi fs to nand flash.
+mtdparts default;ubi part rootfs;tftp 10000000 192.168.2.200:rootfs.img;ubi createvol rootfs; ubi write 10000000 rootfs 0x23ee000
+
 */
 #else
 #define CONFIG_SYS_FSL_USDHC_NUM	3
@@ -127,14 +139,18 @@ tftp 12000000 zImage;tftp 18000000 zImage.dtb;bootz 12000000 - 18000000
 #define CONFIG_USB_EHCI_MX6
 #define CONFIG_USB_STORAGE
 #define CONFIG_EHCI_HCD_INIT_AFTER_RESET
+/*
 #define CONFIG_USB_HOST_ETHER
 #define CONFIG_USB_ETHER_ASIX
+*/
 #define CONFIG_MXC_USB_PORTSC		(PORT_PTS_UTMI | PORT_PTS_PTW)
 #define CONFIG_MXC_USB_FLAGS		0
 #define CONFIG_USB_MAX_CONTROLLER_COUNT	2 /* Enabled USB controller number */
 #endif
 
 #ifdef CONFIG_SYS_USE_EIMNOR
+
+
 #undef CONFIG_SYS_NO_FLASH
 #define CONFIG_SYS_FLASH_BASE           WEIM_ARB_BASE_ADDR
 #define CONFIG_SYS_FLASH_SECT_SIZE      (128 * 1024)
@@ -191,3 +207,10 @@ tftp 12000000 zImage;tftp 18000000 zImage.dtb;bootz 12000000 - 18000000
 #endif /* CONFIG_SPLASH_SCREEN && CONFIG_MXC_EPDC */
 
 #endif                         /* __MX6QSABRESD_CONFIG_H */
+
+
+
+
+ 
+ 
+ 

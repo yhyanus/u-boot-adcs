@@ -27,13 +27,40 @@ struct mxc_ccm_reg *imx_ccm = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
 void enable_ccm_clko1(unsigned char enable)
 {
 	u32 reg;
+	u32 pll_num ,pll_denom,test_div;
+	u32 div = __raw_readl(&imx_ccm->analog_pll_audio);
+	printf("analog_pll_audio=%x\n",div);
+#if 0
+	if (!(div & BM_ANADIG_PLL_AUDIO_ENABLE))
+		return 0;
+	/* BM_ANADIG_PLL_AUDIO_BYPASS_CLK_SRC is ignored */
+	if (div & BM_ANADIG_PLL_AUDIO_BYPASS)
+		return MXC_HCLK;
+#endif
+	pll_num = __raw_readl(&imx_ccm->analog_pll_audio_num);
+	pll_denom = __raw_readl(&imx_ccm->analog_pll_audio_denom);
+printf("pll_num=%x ;pll_denom=%x\n",pll_num ,pll_denom);
 
-	reg = __raw_readl(&imx_ccm->ccosr);
+#if 0
+	test_div = (div & BM_ANADIG_PLL_AUDIO_TEST_DIV_SELECT) >>
+		BP_ANADIG_PLL_AUDIO_TEST_DIV_SELECT;
+	div &= BM_ANADIG_PLL_AUDIO_DIV_SELECT;
+ 
+	test_div = 1 << (2 - test_div);
+#endif
+/*	div = 0x201e;
+	pll_num = 72; pll_denom =100;
+	__raw_writel(pll_num,&imx_ccm->analog_pll_audio_num);
+	__raw_writel(pll_denom,&imx_ccm->analog_pll_audio_denom);
+	__raw_writel(div,&imx_ccm->analog_pll_audio);
+*/
+ 	reg = __raw_readl(&imx_ccm->ccosr);
 	if (enable)
 		reg |= MXC_CCM_CCOSR_CKOL_EN;
 	else
 		reg &= ~(MXC_CCM_CCOSR_CKOL_EN);
 	__raw_writel(reg, &imx_ccm->ccosr);
+
 
 }
 #endif

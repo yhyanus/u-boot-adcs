@@ -353,7 +353,34 @@ int spi_flash_probe_slave(struct spi_slave *spi, struct spi_flash *flash)
 		flash->erase= spi_flash_cmd_erase_ops ;
 		flash->spi = spi;	
 		return 0;
-	}
+	}else if(spi->bus==4  ) //hi3210
+	{
+		if(  spi->cs==2)
+		{
+			flash->name = "hi3210";
+			flash->size= 64*1024;
+			flash->read=spi_a3210_cmd_read_ops;
+			flash->write=spi_a3210_cmd_write_ops ;
+		}else if( spi->cs==0)
+		{
+			flash->name = "hi3717";
+			flash->size= 512;
+			flash->read=spi_a3717_cmd_read_ops;
+			flash->write=spi_a3717_cmd_write_ops ;
+		}
+		flash->page_size=flash->size;
+		flash->sector_size=flash->size;
+		flash->erase_size=flash->size;
+		printf("SF: Detected %s ,0x%x bytes\n", flash->name,flash->size);
+		flash->read_cmd = 0x80;	 
+		flash->write_cmd = 0x84;
+		flash->poll_cmd=0;
+		flash->erase_cmd=0;	
+		
+		flash->erase= spi_flash_cmd_erase_ops ;
+		flash->spi = spi;	
+		return 0;
+	}else
 #endif
 	/* Claim spi bus */
 	ret = spi_claim_bus(spi);

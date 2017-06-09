@@ -4,7 +4,7 @@
 #
 # SPDX-License-Identifier:	GPL-2.0+
 #
-
+ccflags-y += -DDEBUG=1
 obj-$(CONFIG_ATI_RADEON_FB) += ati_radeon_fb.o videomodes.o
 obj-$(CONFIG_ATMEL_HLCD) += atmel_hlcdfb.o
 obj-$(CONFIG_ATMEL_LCD) += atmel_lcdfb.o

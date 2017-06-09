@@ -22,7 +22,9 @@
 #include <div64.h>
 #include "ipu.h"
 #include "ipu_regs.h"
-
+#ifndef DEBUG
+#error no debug
+#endif
 extern struct mxc_ccm_reg *mxc_ccm;
 extern u32 *ipu_cpmem_base;
 

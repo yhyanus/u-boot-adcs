@@ -16,7 +16,7 @@
 #include <watchdog.h>
 
 #include "sf_internal.h"
-
+#define debug printf
 static void spi_flash_addr(u32 addr, u8 *cmd)
 {
 	/* cmd[0] is actual command */
@@ -293,27 +293,29 @@ int spi_flash_write_common(struct spi_flash *flash, const u8 *cmd,
 		debug("SF: unable to claim SPI bus\n");
 		return ret;
 	}
-
-	ret = spi_flash_cmd_write_enable(flash);
-	if (ret < 0) {
-		debug("SF: enabling write failed\n");
-		return ret;
+	if(spi->bus!=4)
+	{
+		ret = spi_flash_cmd_write_enable(flash);
+		if (ret < 0) {
+			debug("SF: enabling write failed\n");
+			return ret;
+		}
 	}
-
 	ret = spi_flash_cmd_write(spi, cmd, cmd_len, buf, buf_len);
 	if (ret < 0) {
 		debug("SF: write cmd failed\n");
 		return ret;
 	}
-
-	ret = spi_flash_cmd_wait_ready(flash, timeout);
-	if (ret < 0) {
-		debug("SF: write %s timed out\n",
-		      timeout == SPI_FLASH_PROG_TIMEOUT ?
-			"program" : "page erase");
-		return ret;
+	if(spi->bus!=4)
+	{
+		ret = spi_flash_cmd_wait_ready(flash, timeout);
+		if (ret < 0) {
+			debug("SF: write %s timed out\n",
+				  timeout == SPI_FLASH_PROG_TIMEOUT ?
+				"program" : "page erase");
+			return ret;
+		}
 	}
-
 	spi_release_bus(spi);
 
 	return ret;
@@ -625,4 +627,189 @@ int sst_write_bp(struct spi_flash *flash, u32 offset, size_t len,
 	spi_release_bus(flash->spi);
 	return ret;
 }
+#endif
+
+
+#ifdef CONFIG_ADCS
+/////address map for hi3210
+// 8000-800f fast access register
+// 9000-9003 Transmit ARINC 429 message on transmit bus TT
+// A000-A007 Read ARINC 429 FIFO # RRR. Reads exactly four bytes
+// B000-B007 Read ARINC block at receive channel RRR, label <ARIn>
+// C000-C007 Read ARINC message at receive channel RRR, label <ARIn>
+// D000      for MAP register    
+int spi_a3210_cmd_write_ops(struct spi_flash *flash, u32 offset,
+		size_t len, const void *buf)
+{
+	unsigned long byte_addr, page_size;
+	u32 write_addr;
+	size_t chunk_len, actual;
+	u8 cmd[SPI_FLASH_CMD_LEN];
+	int ret = -1;
+
+	page_size =  flash->page_size;
+
+	//cmd[0] = flash->write_cmd;
+	for (actual = 0; actual < len; actual += chunk_len) {
+		write_addr = offset;
+
+		byte_addr = offset % page_size;
+		chunk_len = min(len - actual, (size_t)(page_size - byte_addr));
+
+		if (flash->spi->max_write_size)
+			chunk_len = min(chunk_len,
+					(size_t)flash->spi->max_write_size);
+
+		//spi_flash_addr(write_addr, cmd);
+		if(offset>=0x8000 && offset<0x8010)
+		{
+			cmd[0] =  0x40 | ((offset&0xf)<<2)  ;/* nor->program_opcode; */
+		}else if(offset>=0x9000 && offset< 0x9004)
+		{
+			cmd[0] =  0x94 | (offset&0x3)  ;
+		}else if(offset==0xD000 )  // for debug only
+		{
+			cmd[0] =  0x8c ;
+			chunk_len = 2;
+		}else{
+			cmd[0] = 0x8C ;
+			cmd[1] = (offset>>8)&0xff;
+			cmd[2] = (offset)&0xff;
+			ret = spi_flash_write_common(flash, cmd, 1,
+						cmd+1, 2);
+			debug("SF: 0x%p => cmd = { 0x%02x 0x%02x%02x%02x } chunk_len = %zu\n",
+				  buf + actual, cmd[0], cmd[1], cmd[2], cmd[3], chunk_len);
+		
+			cmd[0] = 0x84 ;
+		}
+		ret = spi_flash_write_common(flash, cmd, 1,
+					buf + actual, chunk_len);
+		if (ret < 0) {
+			debug("SF: write failed\n");
+			break;
+		}
+
+		offset += chunk_len;
+	}
+
+	return ret;
+}
+int spi_a3210_cmd_read_ops(struct spi_flash *flash, u32 offset,
+		size_t len, void *data)
+{
+	u8 cmd[SPI_FLASH_CMD_LEN+4], cmdsz;
+	u32 remain_len, read_len, read_addr;
+	int bank_sel = 0;
+	int ret = -1;
+
+ 
+
+	cmdsz = SPI_FLASH_CMD_LEN + flash->dummy_byte;
+	/*cmd = calloc(1, cmdsz);
+	if (!cmd) {
+		debug("SF: Failed to allocate cmd\n");
+		return -ENOMEM;
+	}*/
+debug("SF:spi_a3210_cmd_read_ops = %x\n",offset);
+	//cmd[0] = flash->read_cmd;
+	while (len) {
+		read_addr = offset;
+ 
+		remain_len = ((SPI_FLASH_16MB_BOUN << flash->shift) *
+				(bank_sel + 1)) - offset;
+		if (len < remain_len)
+			read_len = len;
+		else
+			read_len = remain_len;
+
+		if(read_addr>=0x8000 && read_addr<0x8010)
+		{
+			cmd[0] =  (read_addr&0xf)<<2 ; /*nor->program_opcode; */
+		}else if(read_addr>=0xA000 && read_addr < 0xA007)  /* Read ARINC 429 FIFO # RRR. Reads exactly four bytes */
+		{
+			cmd[0] = 0xA0| (read_addr&0x7)<<2 ; 
+			len= (len)/4*4 ;
+		}else if(read_addr>=0xB000 &&  read_addr < 0xB007)  /* Read ARINC block at receive channel RRR, label <ARIn> */
+		{
+			cmd[0] = 0xC0| (read_addr&0x7)<<2 ; 
+			len=  4 ;
+		}else if(read_addr>=0xC000 && read_addr < 0xC007)  /* Read ARINC message at receive channel RRR, label <ARIn> */
+		{
+			cmd[0] = 0xE0| (read_addr&0x7)<<2 ; 
+			len=  4 ;
+		}else if(offset==0xD000 )  // for debug only
+		{
+			cmd[0] =  0x88 ;
+			len = 2;
+		}else{
+			//spi_flash_addr(read_addr, cmd);
+			cmd[0] = 0x8C ;
+			cmd[1] = (read_addr>>8)&0xff;
+			cmd[2] = (read_addr)&0xff;
+			//ret = spi_flash_write_common(flash, cmd, 1,	cmd+1, 2);
+			ret = spi_flash_write_common(flash, cmd, 3,	NULL, 0);
+			cmd[0] = 0x80 ;
+		}
+		ret = spi_flash_read_common(flash, cmd, 1, data, read_len);
+		if (ret < 0) {
+			debug("SF: read failed\n");
+			break;
+		}
+		 
+		offset += read_len;
+		len -= read_len;
+		data += read_len;
+	}
+
+//	free(cmd);
+	return ret;
+}
+
+int spi_a3717_cmd_write_ops(struct spi_flash *flash, u32 offset,
+		size_t len, const void *buf)
+{
+	unsigned long byte_addr, page_size;
+	u32 write_addr;
+	size_t chunk_len=len, actual;
+	u8 cmd[SPI_FLASH_CMD_LEN];
+	int ret = -1;
+
+
+	cmd[0] = offset & 0xff; //0x64 ;
+	ret = spi_flash_write_common(flash, cmd, 1,
+				buf , chunk_len);
+	if (ret < 0) {
+		debug("SF: write failed\n");
+		 
+	}
+
+
+	return ret;
+}
+int spi_a3717_cmd_read_ops(struct spi_flash *flash, u32 offset,
+		size_t len, void *data)
+{
+	u8 cmd[SPI_FLASH_CMD_LEN], cmdsz;
+	u32 remain_len, read_len=len, read_addr;
+	int bank_sel = 0;
+	int ret = -1; 
+
+	cmdsz = SPI_FLASH_CMD_LEN + flash->dummy_byte;
+/*	cmd = calloc(1, cmdsz);
+	if (!cmd) {
+		debug("SF: Failed to allocate cmd\n");
+		return -ENOMEM;
+	}
+*/
+	cmd[0] = offset & 0xff; //0xE4 ;
+	ret = spi_flash_read_common(flash, cmd, 1, data, read_len);
+	if (ret < 0) {
+		debug("SF: read failed\n");		 
+	}else{
+	}
+
+ 	//free(cmd);
+	return ret;
+}
+
 #endif

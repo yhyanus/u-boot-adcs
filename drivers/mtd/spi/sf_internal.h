@@ -230,4 +230,18 @@ int spi_flash_read_common(struct spi_flash *flash, const u8 *cmd,
 int spi_flash_cmd_read_ops(struct spi_flash *flash, u32 offset,
 		size_t len, void *data);
 
+
+int spi_a3210_cmd_write_ops(struct spi_flash *flash, u32 offset,
+		size_t len, const void *buf);
+
+/* Flash read operation, support all possible read commands */
+int spi_a3210_cmd_read_ops(struct spi_flash *flash, u32 offset,
+		size_t len, void *data);
+
+int spi_a3717_cmd_write_ops(struct spi_flash *flash, u32 offset,
+		size_t len, const void *buf);
+
+/* Flash read operation, support all possible read commands */
+int spi_a3717_cmd_read_ops(struct spi_flash *flash, u32 offset,
+		size_t len, void *data);
 #endif /* _SF_INTERNAL_H_ */
